@@ -84,6 +84,7 @@ variable "repositories" {
     environments        = list(string)
     topics              = list(string)
     visibility          = string
+    code_owners         = optional(list(string), [])
   }))
   default = {}
 }
