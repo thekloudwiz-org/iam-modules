@@ -16,7 +16,6 @@ variable "environment" {
 variable "owner" {
   description = "Name of the repository owner"
   type        = string
-  default     = ""
 }
 
 variable "github_org" {
@@ -33,19 +32,16 @@ variable "github_token" {
 variable "org_admins" {
   description = "List of GitHub usernames that should be admins of the organization"
   type        = list(string)
-  default     = []
 }
 
 variable "org_members" {
   description = "List of GitHub usernames that should be members of the organization"
   type        = list(string)
-  default     = []
 }
 
 variable "org_blocked_users" {
   description = "List of GitHub usernames that should be blocked from the organization"
   type        = set(string)
-  default     = []
 }
 
 variable "github_teams" {
