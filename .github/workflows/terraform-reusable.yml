@@ -52,6 +52,16 @@ jobs:
           terraform_version: ${{ inputs.terraform_version }}
           terraform_wrapper: false
 
+      - name: Validate GitHub Token
+        run: |
+          if [ -z "${{ secrets.GH_PAT }}" ]; then
+            echo "::error::GH_PAT secret is empty or not set. GitHub provider requires a valid token."
+            exit 1
+          fi
+          echo "GH_PAT is set (length: ${#GH_PAT} chars)"
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
       - name: Debug Terraform Version
         run: |
           terraform version
