@@ -52,6 +52,9 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Debug Terraform Version
+        run: terraform version
+
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
