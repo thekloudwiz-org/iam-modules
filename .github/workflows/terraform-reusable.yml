@@ -53,7 +53,11 @@ jobs:
           terraform_wrapper: false
 
       - name: Debug Terraform Version
-        run: terraform version
+        run: |
+          terraform version
+          echo "--- Checking var files ---"
+          cat global.tfvars | grep github_org || echo "github_org not found in global.tfvars"
+          ls -la global.tfvars environments/${{ inputs.environment }}.tfvars
 
       - name: Terraform Format
         id: fmt
