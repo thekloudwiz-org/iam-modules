@@ -2,6 +2,8 @@
 
 A comprehensive Terraform infrastructure for managing AWS IAM resources with automated GitHub Actions CI/CD pipeline, supporting multi-environment deployments with remote state management.
 
+> **📖 Documentation:** This README covers architecture and quick start. For operations and troubleshooting, see [OPERATIONS.md](OPERATIONS.md). For GitHub Actions setup, see [GITHUB_SETUP.md](GITHUB_SETUP.md).
+
 ## 🏗️ Architecture Overview
 
 This repository provides a complete DevSecOps solution for IAM management with:
@@ -58,7 +60,29 @@ iam-modules/
 - AWS CLI configured with appropriate permissions
 - Terraform >= 1.5.0
 - GitHub Personal Access Token
-- S3 bucket `thekloudwiz-tf-state-bucket` (already exists)
+- S3 bucket for state storage (see Bootstrap section)
+
+### Bootstrap Backend Infrastructure
+
+**First-time setup only:**
+
+1. **Create backend infrastructure**:
+   ```bash
+   cd bootstrap
+   terraform init
+   terraform apply
+   ```
+
+   This creates:
+   - S3 bucket: `thekloudwiz-tf-state-bucket`
+   - Versioning enabled for state history
+   - Encryption enabled (AES256)
+   - Public access blocked
+
+2. **Verify backend**:
+   ```bash
+   aws s3 ls s3://thekloudwiz-tf-state-bucket --region eu-central-1
+   ```
 
 ### Local Development Setup
 
@@ -68,7 +92,7 @@ iam-modules/
    cd iam-modules
    
    # Initialize with remote state for dev environment
-   make init dev
+   terraform init -backend-config=backend/dev.hcl
    ```
 
 2. **Set environment variables**:
@@ -77,13 +101,18 @@ iam-modules/
    export AWS_PROFILE="your-aws-profile"  # Optional
    ```
 
-3. **Plan and apply changes**:
+3. **Validate configuration**:
+   ```bash
+   ./scripts/validate-config.sh
+   ```
+
+4. **Plan and apply changes**:
    ```bash
    # Plan changes for development
-   make plan dev
+   terraform plan -var-file=environments/dev.tfvars -var-file=global.tfvars
    
    # Apply changes
-   make apply dev
+   terraform apply -var-file=environments/dev.tfvars -var-file=global.tfvars
    ```
 
 ### GitHub Actions Setup
@@ -124,12 +153,19 @@ See [GITHUB_SETUP.md](GITHUB_SETUP.md) for detailed setup instructions.
 Each environment maintains separate state files in S3:
 
 ```
-Bucket: thekloudwiz-tf-state-bucket
+Bucket: thekloudwiz-tf-state-bucket (eu-central-1)
 ├── iam-modules/dev-terraform.state
 ├── iam-modules/stg-terraform.state  
 ├── iam-modules/qa-terraform.state
 └── iam-modules/prd-terraform.state
 ```
+
+**State Management Features:**
+- ✅ S3 versioning for state history
+- ✅ Server-side encryption (AES256)
+- ✅ Strong read-after-write consistency
+- ✅ Automatic version cleanup (90 days)
+- ✅ Public access blocked
 
 ### Environment-Specific Deployments
 
@@ -236,11 +272,75 @@ make help                 # Show all available commands
 - **Secret management** via GitHub repository secrets
 - **Multi-environment approval workflows**
 
-## 📚 Additional Resources
+## 📚 Documentation
 
-- [GITHUB_SETUP.md](GITHUB_SETUP.md) - Detailed GitHub Actions setup
-- [Makefile](Makefile) - All available development commands
-- [scripts/migrate-state.sh](scripts/migrate-state.sh) - State migration utility
+### Core Documentation
+- **[README.md](README.md)** (this file) - Main documentation and quick start
+- **[GITHUB_SETUP.md](GITHUB_SETUP.md)** - GitHub Actions CI/CD setup guide
+- **[OPERATIONS.md](OPERATIONS.md)** - Operations, troubleshooting, and disaster recovery
+
+### Additional Resources
+- **[bootstrap/README.md](bootstrap/README.md)** - Backend infrastructure setup
+- **[Makefile](Makefile)** - All available development commands
+
+### Utility Scripts
+- `scripts/setup-github-token.sh` - Setup GitHub token permanently
+- `scripts/migrate-state.sh` - Migrate from local to remote state
+- `scripts/backup-state.sh` - Backup state from S3
+- `scripts/restore-state.sh` - Restore state from backup
+- `scripts/validate-config.sh` - Validate configuration before apply
+
+## 🚀 Quick Reference
+
+### Common Commands
+
+```bash
+# Setup (one time)
+make setup-token              # Setup GitHub token
+make init dev                 # Initialize dev environment
+
+# Daily operations
+make plan-dev                 # Plan dev changes
+make apply-dev                # Apply dev changes
+make backup dev               # Backup dev state
+
+# Validation
+make validate                 # Basic validation
+make validate-all             # Comprehensive checks
+make fmt                      # Format code
+
+# Help
+make help                     # Show all commands
+```
+
+### CI/CD Workflows
+
+```bash
+# Deploy to dev
+git checkout dev
+git push origin dev           # Auto-deploys to dev
+
+# Deploy to production
+# 1. Create PR to main
+# 2. Review plan in PR comments
+# 3. Merge PR → Auto-deploys to prd
+```
+
+### Emergency Commands
+
+```bash
+# Restore corrupted state
+./scripts/restore-state.sh backups/terraform.tfstate.backup
+
+# Check current backend
+cat .terraform/terraform.tfstate | jq '.backend.config.key'
+
+# List state versions
+aws s3api list-object-versions \
+  --bucket thekloudwiz-tf-state-bucket \
+  --prefix iam-modules/dev-terraform.state \
+  --region eu-central-1
+```
 
 ## 🤝 Contributing
 
@@ -253,7 +353,8 @@ make help                 # Show all available commands
 ## 📞 Support
 
 For issues and questions:
-- Create GitHub issue for bugs or feature requests
-- Check workflow logs in Actions tab
-- Review drift detection issues for infrastructure problems
-- Consult [GITHUB_SETUP.md](GITHUB_SETUP.md) for configuration help
+- **Troubleshooting:** See [OPERATIONS.md](OPERATIONS.md#troubleshooting)
+- **GitHub Actions:** See [GITHUB_SETUP.md](GITHUB_SETUP.md)
+- **Disaster Recovery:** See [OPERATIONS.md](OPERATIONS.md#disaster-recovery)
+- **Create GitHub issue** for bugs or feature requests
+- **Check workflow logs** in Actions tab

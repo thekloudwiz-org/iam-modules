@@ -8,15 +8,15 @@
 
 locals {
   # Filter out the organization owner from admins and members
-  filtered_admins = { for i in var.admins : lower(i) => "admin" if lower(i) != lower(var.org_owner) }
+  filtered_admins  = { for i in var.admins : lower(i) => "admin" if lower(i) != lower(var.org_owner) }
   filtered_members = { for i in var.members : lower(i) => "member" if lower(i) != lower(var.org_owner) }
-  memberships = merge(local.filtered_admins, local.filtered_members)
+  memberships      = merge(local.filtered_admins, local.filtered_members)
 }
 
 # Reference the existing organization without requesting email field
 data "github_organization" "org" {
   count = var.is_organization ? 1 : 0
-  name = var.github_org
+  name  = var.github_org
 }
 
 # Safeguard for validating if a GitHub user exists on `terraform plan`

@@ -4,10 +4,10 @@ resource "github_repository_file" "codeowners" {
     if lookup(repo, "create_codeowners", false)
   }
 
-  repository          = github_repository.repos[each.key].name
-  branch              = "main"
-  file                = ".github/CODEOWNERS"
-  content             = templatefile(
+  repository = github_repository.repos[each.key].name
+  branch     = "main"
+  file       = ".github/CODEOWNERS"
+  content = templatefile(
     "${path.module}/templates/CODEOWNERS.tpl",
     {
       default_owners = lookup(each.value, "default_owners", [])
@@ -29,10 +29,10 @@ resource "github_repository_file" "pr_template" {
     if lookup(repo, "create_pr_template", false)
   }
 
-  repository          = github_repository.repos[each.key].name
-  branch              = "main"
-  file                = ".github/PULL_REQUEST_TEMPLATE.md"
-  content             = templatefile(
+  repository = github_repository.repos[each.key].name
+  branch     = "main"
+  file       = ".github/PULL_REQUEST_TEMPLATE.md"
+  content = templatefile(
     "${path.module}/templates/PULL_REQUEST_TEMPLATE.md.tpl",
     {
       project_name = each.key

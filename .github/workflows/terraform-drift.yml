@@ -29,11 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: ${{ 
-          github.event.inputs.environment == 'all' || github.event.inputs.environment == '' 
-          && fromJson('["dev", "stg", "qa", "prd"]') 
-          || fromJson(format('["{0}"]', github.event.inputs.environment)) 
-        }}
+        environment: ${{ (github.event.inputs.environment == 'all' || github.event.inputs.environment == '') && fromJson('["dev", "stg", "qa", "prd"]') || fromJson(format('["{0}"]', github.event.inputs.environment)) }}
       fail-fast: false
     
     permissions:

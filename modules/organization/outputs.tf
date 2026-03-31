@@ -10,7 +10,7 @@ output "org_name" {
 
 output "all_team_id" {
   description = "ID of the team containing all members"
-  value       = var.all_members_team_name != null ? github_team.all[0].id : null
+  value       = var.all_members_team_name != null && length(github_team.all) > 0 ? github_team.all[0].id : null
 }
 
 output "members" {

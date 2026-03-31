@@ -1,6 +1,33 @@
 # GitHub Actions Setup Guide
 
-This document explains how to set up GitHub Actions for automated Terraform deployments.
+This document explains how to set up GitHub Actions for automated Terraform deployments using reusable workflows.
+
+## CI/CD Workflow Overview
+
+### Workflow Strategy
+
+```
+Branch Push (dev/stg/qa/prd)
+  ↓
+  Format → Validate → Plan → Apply to respective environment
+
+Pull Request to main
+  ↓
+  Format → Validate → Plan (prd) → Comment on PR
+
+Merge to main
+  ↓
+  Format → Validate → Plan → Apply to prd → Notify
+```
+
+### Workflows
+
+1. **terraform-reusable.yml** - Core reusable workflow
+2. **branch-deploy.yml** - Deploy on branch push
+3. **pull-request.yml** - Plan on PR to main
+4. **production-deploy.yml** - Deploy to production on merge
+5. **terraform-drift.yml** - Daily drift detection
+6. **repository-management.yml** - Manual repository operations
 
 ## Required Repository Secrets
 
@@ -12,6 +39,8 @@ The ARN of the IAM role that GitHub Actions will assume for AWS operations.
 ```
 AWS_ROLE_ARN: arn:aws:iam::ACCOUNT-ID:role/GitHubActionsRole
 ```
+
+**Note:** This role will be created by this Terraform configuration.
 
 ### 2. GITHUB_TOKEN
 GitHub Personal Access Token with repository management permissions.
@@ -25,53 +54,188 @@ GITHUB_TOKEN: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 - `admin:org` (Full control of orgs and teams, read and write org projects)
 - `delete_repo` (Delete repositories)
 
-## Environment Protection Rules
+## Branch Strategy
 
-Set up environment protection rules for each environment:
+### Environment Branches
 
-1. Go to **Settings** → **Environments**
-2. Create environments: `dev`, `stg`, `qa`, `prd`
-3. Configure protection rules:
-   - **Required reviewers**: Add team members for production environments
-   - **Wait timer**: Add delays for production deployments
-   - **Deployment branches**: Restrict to `main` branch for production
+Create and protect these branches:
+
+- `dev` - Development environment
+- `stg` - Staging environment
+- `qa` - QA/Testing environment
+- `prd` - Production environment (optional, or use main)
+- `main` - Production deployment branch
+
+### Branch Protection Rules
+
+**For main branch:**
+1. Go to **Settings** → **Branches** → **Add rule**
+2. Branch name pattern: `main`
+3. Enable:
+   - ✅ Require pull request reviews before merging
+   - ✅ Require status checks to pass (select "Plan Production Changes")
+   - ✅ Require branches to be up to date
+   - ✅ Include administrators
+
+**For environment branches (dev, stg, qa, prd):**
+1. Optional: Add protection rules
+2. Consider requiring status checks
+3. Allow direct pushes for faster iteration
 
 ## Workflow Triggers
 
-### Terraform Plan (Pull Requests)
-- Triggers on PRs to `main` or `develop` branches
-- Runs `terraform plan` for affected environments
-- Posts plan output as PR comments
-- Validates Terraform configuration
+### 1. Branch Deploy (branch-deploy.yml)
+**Triggers:** Push to `dev`, `stg`, `qa`, or `prd` branches
 
-### Terraform Apply (Main Branch)
-- Triggers on pushes to `main` branch
-- Automatically detects changed environments
-- Deploys changes sequentially
-- Creates issues on deployment failures
+**Actions:**
+- Auto-formats Terraform files
+- Validates configuration
+- Plans changes
+- **Applies changes automatically** to the respective environment
 
-### Manual Deployment
-- Use **Actions** → **Terraform Apply** → **Run workflow**
-- Select environment and action (apply/destroy)
-- Useful for hotfixes or rollbacks
+**Example:**
+```bash
+git checkout dev
+git add .
+git commit -m "feat: add new IAM policy"
+git push origin dev
+# → Automatically deploys to dev environment
+```
 
-### Drift Detection
-- Runs daily at 6 AM UTC
-- Checks all environments for configuration drift
-- Creates GitHub issues when drift is detected
-- Updates existing issues with new detections
+### 2. Pull Request (pull-request.yml)
+**Triggers:** PR to `main` branch
 
-### Repository Management
-- Manual workflow for repository operations
-- Actions: create-repositories, update-trust-policies, add-external-repo
-- Useful for managing GitHub repositories and IAM trust policies
+**Actions:**
+- Auto-formats Terraform files
+- Validates configuration
+- Plans changes for **production**
+- Posts plan as PR comment
+- **Does NOT apply** (review only)
+
+**Example:**
+```bash
+git checkout -b feature/new-policy
+# Make changes
+git push origin feature/new-policy
+# Create PR to main
+# → Shows production plan in PR comments
+```
+
+### 3. Production Deploy (production-deploy.yml)
+**Triggers:** Merge to `main` branch
+
+**Actions:**
+- Auto-formats Terraform files
+- Validates configuration
+- Plans changes for production
+- **Applies changes to production**
+- Creates success notification issue
+
+**Example:**
+```bash
+# After PR is approved and merged
+# → Automatically deploys to production
+# → Creates GitHub issue with deployment details
+```
+
+### 4. Drift Detection (terraform-drift.yml)
+**Triggers:** Daily at 6 AM UTC, or manual
+
+**Actions:**
+- Checks all environments for drift
+- Creates/updates GitHub issues
+- Provides remediation guidance
+
+### 5. Repository Management (repository-management.yml)
+**Triggers:** Manual workflow dispatch
+
+**Actions:**
+- Create repositories
+- Update trust policies
+- Add external repositories
+
+## Deployment Flow Examples
+
+### Deploying to Development
+
+```bash
+# 1. Create feature branch from dev
+git checkout dev
+git pull origin dev
+git checkout -b feature/add-new-policy
+
+# 2. Make changes
+# Edit files...
+
+# 3. Commit and push to dev
+git add .
+git commit -m "feat: add new deployment policy"
+git push origin dev
+
+# 4. GitHub Actions automatically:
+#    - Formats code
+#    - Validates
+#    - Plans
+#    - Applies to dev environment
+```
+
+### Deploying to Production
+
+```bash
+# 1. Create PR from dev to main
+git checkout dev
+git pull origin dev
+git push origin dev
+
+# Create PR: dev → main
+
+# 2. GitHub Actions automatically:
+#    - Plans production changes
+#    - Posts plan in PR comments
+
+# 3. Review the plan in PR
+
+# 4. Merge PR to main
+
+# 5. GitHub Actions automatically:
+#    - Applies to production
+#    - Creates success notification
+```
+
+### Promoting Through Environments
+
+```bash
+# 1. Develop in dev branch
+git checkout dev
+# Make changes, test
+git push origin dev
+# → Deploys to dev
+
+# 2. Promote to staging
+git checkout stg
+git merge dev
+git push origin stg
+# → Deploys to stg
+
+# 3. Promote to QA
+git checkout qa
+git merge stg
+git push origin qa
+# → Deploys to qa
+
+# 4. Promote to production
+git checkout dev
+# Create PR to main
+# Review and merge
+# → Deploys to prd
+```
 
 ## Backend State Management
 
 Each environment uses a separate state file in S3:
 
 ```
-Bucket: thekloudwiz-tf-state-bucket
+Bucket: thekloudwiz-tf-state-bucket (eu-central-1)
 Keys:
   - iam-modules/dev-terraform.state
   - iam-modules/stg-terraform.state
@@ -84,44 +248,43 @@ Keys:
 For local development, initialize with environment-specific backend:
 
 ```bash
+# Setup GitHub token (one time)
+make setup-token
+
 # Initialize for dev environment
 make init dev
 
 # Plan changes for dev
-make plan dev
+make plan-dev
 
 # Apply changes for dev
-make apply dev
+make apply-dev
 ```
 
 ## Troubleshooting
 
-### State Lock Issues
-If you encounter state lock issues:
+For detailed troubleshooting, see [OPERATIONS.md](OPERATIONS.md#troubleshooting).
 
+### Quick Fixes
+
+**Workflow Failures:**
+1. Check AWS Role Permissions
+2. Verify GitHub Token hasn't expired
+3. Confirm S3 bucket access
+4. Review workflow logs in Actions tab
+
+**State Issues:**
 ```bash
-# Force unlock (use with caution)
-terraform force-unlock LOCK_ID
+# Migrate from local to remote state
+./scripts/migrate-state.sh dev
+
+# Backup state before changes
+./scripts/backup-state.sh dev
 ```
 
-### Backend Migration
-To migrate from local to remote state:
-
-```bash
-# Initialize with new backend
-terraform init -backend-config=backend/dev.hcl
-
-# Terraform will prompt to migrate existing state
-# Answer 'yes' to copy state to new backend
-```
-
-### Workflow Failures
-Check the following if workflows fail:
-
-1. **AWS Role Permissions**: Ensure the GitHub Actions role has necessary IAM permissions
-2. **GitHub Token**: Verify token has required permissions and hasn't expired
-3. **Backend Access**: Confirm S3 bucket exists and is accessible
-4. **DynamoDB Table**: Ensure state locking table exists (terraform-state-lock)
+**For more help:**
+- [OPERATIONS.md](OPERATIONS.md) - Complete troubleshooting guide
+- [README.md](README.md) - Main documentation
 
 ## Security Best Practices
 

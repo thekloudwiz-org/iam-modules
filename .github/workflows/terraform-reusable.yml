@@ -1,0 +1,152 @@
+name: Terraform Reusable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev, stg, qa, prd)'
+        required: true
+        type: string
+      action:
+        description: 'Action to perform (plan, apply)'
+        required: true
+        type: string
+      terraform_version:
+        description: 'Terraform version'
+        required: false
+        type: string
+        default: '1.5.0'
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+
+env:
+  TF_VERSION: ${{ inputs.terraform_version }}
+  AWS_REGION: eu-central-1
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }} - ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: terraform-${{ inputs.action }}-${{ inputs.environment }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Format (Fix)
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "Formatting issues found. Auto-formatting..."
+          terraform fmt -recursive
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: auto-format terraform files [skip ci]"
+          git push || echo "No changes to push"
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config=backend/${{ inputs.environment }}.hcl \
+            -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -var-file=environments/${{ inputs.environment }}.tfvars \
+            -var-file=global.tfvars \
+            -var="github_token=${{ secrets.GITHUB_TOKEN }}" \
+            -out=tfplan-${{ inputs.environment }} \
+            -no-color
+        continue-on-error: true
+
+      - name: Update Pull Request
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && inputs.action == 'plan'
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Plan for \`${{ inputs.environment }}\` 📖
+            
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Environment: ${{ inputs.environment }}*
+            *Action: ${{ github.event_name }}*
+            *Actor: @${{ github.actor }}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: |
+          terraform apply \
+            -auto-approve \
+            tfplan-${{ inputs.environment }}
+
+      - name: Create Issue on Failure
+        if: failure() && inputs.action == 'apply'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Terraform Apply Failed - ${{ inputs.environment }}`,
+              body: `## Terraform Apply Failed
+              
+              **Environment:** ${{ inputs.environment }}
+              **Workflow:** ${{ github.workflow }}
+              **Run ID:** ${{ github.run_id }}
+              
+              Please check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+              
+              **Commit:** ${{ github.sha }}
+              **Actor:** @${{ github.actor }}`,
+              labels: ['terraform', 'infrastructure', 'bug', '${{ inputs.environment }}']
+            })

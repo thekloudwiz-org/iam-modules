@@ -9,7 +9,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "github_team" "team" {
-  count = var.module_enabled ? 1 : 0
+  count          = var.module_enabled ? 1 : 0
   name           = var.name
   description    = var.description
   privacy        = var.privacy

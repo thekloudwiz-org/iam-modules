@@ -81,7 +81,7 @@ resource "local_file" "trust_policy" {
             "token.actions.githubusercontent.com:sub" = concat(
               local.combined_patterns[each.key],
               # Add pull request pattern for all repositories
-              [for repo_name, repo in local.all_repositories : 
+              [for repo_name, repo in local.all_repositories :
                 "repo:${var.github_org}/${repo_name}:pull_request"
               ]
             )
@@ -110,8 +110,7 @@ resource "null_resource" "update_trust_policy" {
   }
 
   provisioner "local-exec" {
-    command     = "aws iam update-assume-role-policy --role-name ${each.value} --policy-document file://${local_file.trust_policy[each.key].filename}"
-    interpreter = ["PowerShell", "-Command"]
+    command = "aws iam update-assume-role-policy --role-name ${each.value} --policy-document file://${local_file.trust_policy[each.key].filename}"
   }
 
   depends_on = [local_file.trust_policy]

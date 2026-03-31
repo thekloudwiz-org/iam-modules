@@ -1,0 +1,61 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars.backup
+*.tfplan
+*.tfplan.*
+.terraform/
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+terraform.tfstate.d/
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.tf
+secrets.tfvars
+.env
+.env.local
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+crash.log
+crash.*.log
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AWS CLI cache
+.aws/cli/cache/
+
+# Local development
+local.tfvars
+dev.auto.tfvars
+*.local

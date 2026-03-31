@@ -12,10 +12,10 @@ terraform {
     }
   }
 
-  # backend "s3" {
-  #   # Backend configuration will be provided via -backend-config flag
-  #   # See backend/*.hcl files for environment-specific configurations
-  # }
+  backend "s3" {
+    # Backend configuration will be provided via -backend-config flag
+    # See backend/*.hcl files for environment-specific configurations
+  }
 }
 
 provider "aws" {
@@ -27,6 +27,6 @@ provider "aws" {
 }
 
 provider "github" {
-  # token = var.github_token
-  owner = "thekloudwiz-org"
+  token        = var.github_token
+  owner = var.github_org
 }

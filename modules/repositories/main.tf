@@ -28,7 +28,7 @@ resource "github_branch" "dev" {
   repository    = github_repository.repos[each.key].name
   branch        = "dev"
   source_branch = "main"
-  
+
   depends_on = [github_repository.repos]
 }
 
@@ -50,7 +50,7 @@ resource "github_repository_environment" "environments" {
       custom_branch_policies = false
     }
   }
-  
+
   # Simple dependency on both repository and dev branch
   depends_on = [
     github_repository.repos,
@@ -72,7 +72,7 @@ resource "github_branch_protection" "main" {
     require_code_owner_reviews      = true
     required_approving_review_count = 1
   }
-  
+
   depends_on = [github_repository.repos]
 }
 
@@ -93,6 +93,6 @@ resource "github_branch_protection" "dev" {
     required_approving_review_count = 1
     require_code_owner_reviews      = lookup(each.value, "require_code_owner_reviews", false)
   }
-  
+
   depends_on = [github_repository.repos, github_branch.dev]
 }

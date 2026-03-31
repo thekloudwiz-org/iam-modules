@@ -28,7 +28,7 @@ resource "aws_iam_role" "github_actions" {
 
 # For production environments, use the split deployment policies
 resource "aws_iam_role_policy_attachment" "deployment_policies" {
-  for_each = var.environment == "prd" ? toset(["deployment_part1", "deployment_part2", "deployment_part3"]) : []
+  for_each = var.environment == "prd" ? toset(["deployment_part1", "deployment_part2", "deployment_part3", "deployment_part4", "deployment_part5"]) : []
 
   role       = aws_iam_role.github_actions.name
   policy_arn = var.policy_arns[each.value]

@@ -1,36 +1,47 @@
 # org_name   = "thekloudwiz-org"
-github_org = "thekloudwiz-org"
+github_org   = "thekloudwiz-org"
 project_name = "thekloudwiz"
 aws_region   = "eu-central-1"
-owner = "thekloudwiz-org"
+owner        = "thekloudwiz-org"
 # environment  = "global"
 
 # Organization members
 org_admins = [
   "kloudwiz"
-]  
-org_members = ["wizreviewer"]
+]
+org_members       = ["wizreviewer"]
 org_blocked_users = []
 
 # GitHub teams
 github_teams = {
   "developers" = {
-    description = "Team for developers"
-    privacy     = "closed"
-    members     = ["wizreviewer"]
-    maintainers = ["kloudwiz"]
-    admin_repositories    = ["fullstack-todo-task"]
+    description           = "Team for developers"
+    privacy               = "closed"
+    members               = ["wizreviewer"]
+    maintainers           = ["kloudwiz"]
+    admin_repositories    = ["project-ecovolt", "project-kakraba"]
     maintain_repositories = []
     push_repositories     = []
     triage_repositories   = []
     pull_repositories     = []
   },
   "devops" = {
-    description = "Team for DevOps engineers"
-    privacy     = "closed"
-    members     = ["wizreviewer"]
-    maintainers = ["kloudwiz"]
-    admin_repositories    = ["fullstack-todo-task"]
+    description           = "Team for DevOps engineers"
+    privacy               = "closed"
+    members               = ["wizreviewer"]
+    maintainers           = ["kloudwiz"]
+    admin_repositories    = ["project-ecovolt", "project-kakraba"]
+    maintain_repositories = []
+    push_repositories     = []
+    triage_repositories   = []
+    pull_repositories     = []
+  },
+  "analysts" = {
+    description           = "Team for Analysts engineers"
+    privacy               = "closed"
+    members               = ["wizreviewer"]
+    maintainers           = ["kloudwiz"]
+    admin_repositories    = ["project-ecovolt", "project-kakraba"]
     maintain_repositories = []
     push_repositories     = []
     triage_repositories   = []
@@ -40,20 +51,28 @@ github_teams = {
 
 # GitHub repositories configuration
 repositories = {
-  "fullstack-todo-task" = {
+  "project-ecovolt" = {
     description         = "Test repository with multiple environments"
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["development", "terraform", "testing"]
     visibility          = "public"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
-    require_code_owner_reviews = true
+  },
+  "project-kakraba" = {
+    description         = "A fully serverless AWS-powered platform enabling creators to upload, manage, and monetize digital content with secure streaming, paywall logic, and automated distribution."
+    has_dev_environment = true
+    environments        = ["dev", "stg", "qa", "prd"]
+    topics              = ["development", "terraform", "testing"]
+    visibility          = "public"
+    code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
+  },
+    "foodgist-web-app" = {
+    description         = "A serverless food ordering and event booking platform with online payments, real-time order processing, and an admin dashboard for business insights."
+    has_dev_environment = true
+    environments        = ["dev", "stg", "qa", "prd"]
+    topics              = ["serverless", "aws", "terraform", "dynamodb", "api-gateway", "lambda", "cloudfront", "tailwindcss", "paystack", "food-ordering", "ci-cd"]
+    visibility          = "public"
+    code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   }
-  # "test-repo-200625" = {
-  #   description         = "Test repository with multiple environments"
-  #   has_dev_environment = true
-  #   environments        = ["dev", "stg", "qa", "prd"]
-  #   topics              = ["development", "terraform", "testing"]
-  #   visibility          = "public"
-  # }
 }

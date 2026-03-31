@@ -16,12 +16,18 @@ variable "environment" {
 variable "owner" {
   description = "Name of the repository owner"
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "github_org" {
   description = "GitHub organization name"
   type        = string
+}
+
+variable "github_token" {
+  description = "GitHub personal access token"
+  type        = string
+  sensitive   = true
 }
 
 variable "org_admins" {
@@ -45,10 +51,10 @@ variable "org_blocked_users" {
 variable "github_teams" {
   description = "Map of teams to create in the organization"
   type = map(object({
-    description = string
-    privacy     = string
-    members     = list(string)
-    maintainers = list(string)
+    description           = string
+    privacy               = string
+    members               = list(string)
+    maintainers           = list(string)
     admin_repositories    = list(string)
     maintain_repositories = list(string)
     push_repositories     = list(string)

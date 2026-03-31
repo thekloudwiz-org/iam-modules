@@ -1,0 +1,54 @@
+name: Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+      - '.github/workflows/**'
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    uses: ./.github/workflows/terraform-reusable.yml
+    with:
+      environment: prd
+      action: apply
+      terraform_version: '1.5.0'
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+  notify-success:
+    name: Notify Success
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Create Success Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `✅ Production Deployment Successful - ${new Date().toISOString().split('T')[0]}`,
+              body: `## Production Deployment Completed Successfully
+              
+              **Environment:** Production
+              **Workflow:** ${{ github.workflow }}
+              **Run ID:** ${{ github.run_id }}
+              **Commit:** ${{ github.sha }}
+              **Actor:** @${{ github.actor }}
+              
+              [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              
+              ### Next Steps
+              - Verify production resources
+              - Monitor for any issues
+              - Update documentation if needed`,
+              labels: ['terraform', 'infrastructure', 'production', 'deployment']
+            })

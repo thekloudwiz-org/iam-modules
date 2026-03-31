@@ -38,7 +38,8 @@
       "Effect": "Allow",
       "Action": [
         "rds:*",
-        "docdb:*"
+        "docdb:*",
+        "elasticache:*"
       ],
       "Resource": "*"
     },
@@ -58,7 +59,8 @@
       "Action": [
         "logs:*",
         "cloudwatch:*",
-        "sns:*"
+        "sns:*",
+        "xray:*"
       ],
       "Resource": "*"
     },
@@ -85,23 +87,7 @@
       "Sid": "IAMServices",
       "Effect": "Allow",
       "Action": [
-        "iam:CreateRole",
-        "iam:DeleteRole",
-        "iam:GetRole",
-        "iam:UpdateRole",
-        "iam:ListRoles",
-        "iam:PassRole",
-        "iam:AttachRolePolicy",
-        "iam:DetachRolePolicy",
-        "iam:PutRolePolicy",
-        "iam:DeleteRolePolicy",
-        "iam:GetRolePolicy",
-        "iam:ListRolePolicies",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListInstanceProfilesForRole",
-        "iam:TagRole",
-        "iam:UntagRole",
-        "iam:ListRoleTags"
+        "iam:*"
       ],
       "Resource": "*"
     },
@@ -109,7 +95,106 @@
       "Sid": "IdentityServices",
       "Effect": "Allow",
       "Action": [
+        "sts:AssumeRole",
         "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AnalyticsServices",
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:*",
+        "firehose:*",
+        "glue:*",
+        "athena:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BillingServices",
+      "Effect": "Allow",
+      "Action": [
+        "budgets:*",
+        "ce:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AuthenticationServices",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:*",
+        "cognito-identity:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SecurityAuditServices",
+      "Effect": "Allow",
+      "Action": [
+        "cloudtrail:*",
+        "guardduty:*",
+        "securityhub:*",
+        "config:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "APIServices",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "MessagingServices",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IoTServices",
+      "Effect": "Allow",
+      "Action": [
+        "iot:*",
+        "greengrass:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EventServices",
+      "Effect": "Allow",
+      "Action": [
+        "events:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BackupServices",
+      "Effect": "Allow",
+      "Action": [
+        "backup:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ResourceManagement",
+      "Effect": "Allow",
+      "Action": [
+        "resource-groups:*",
+        "tag:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TimestreamServices",
+      "Effect": "Allow",
+      "Action": [
+        "timestream-influxdb:*"
       ],
       "Resource": "*"
     }
