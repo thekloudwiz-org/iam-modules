@@ -89,6 +89,12 @@ variable "repositories" {
   default = {}
 }
 
+variable "is_organization" {
+  description = "Whether the GitHub account is an organization (true) or a user (false). Teams require an organization."
+  type        = bool
+  default     = false
+}
+
 variable "external_repositories" {
   description = "Map of external repositories to include in trust policies"
   type = map(object({

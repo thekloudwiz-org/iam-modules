@@ -2,7 +2,8 @@
 github_org   = "thekloudwiz-org"
 project_name = "thekloudwiz"
 aws_region   = "eu-central-1"
-owner        = "thekloudwiz-org"
+owner            = "thekloudwiz-org"
+is_organization  = true
 # environment  = "global"
 
 # Organization members
@@ -81,6 +82,6 @@ repositories = {
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["iam", "terraform", "oidc", "github-actions", "ci-cd"]
     visibility          = "public"
-    code_owners         = ["kloudwiz", "devops"]
+    code_owners         = ["kloudwiz", "devops", "wizreviewer"]
   }
 }

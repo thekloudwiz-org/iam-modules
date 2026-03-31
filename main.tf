@@ -9,7 +9,7 @@ module "organization" {
   members               = var.org_members
   blocked_users         = var.org_blocked_users
   all_members_team_name = "all-members"
-  is_organization       = false  # Disabled to avoid permission issues
+  is_organization       = var.is_organization
   org_owner             = "thekloudwiz"
 }
 
