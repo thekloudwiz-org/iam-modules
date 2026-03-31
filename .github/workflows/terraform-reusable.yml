@@ -50,6 +50,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ inputs.terraform_version }}
+          terraform_wrapper: false
 
       - name: Debug Terraform Version
         run: terraform version
@@ -87,8 +88,13 @@ jobs:
             -var-file=global.tfvars \
             -var="github_token=${{ secrets.GH_PAT }}" \
             -out=tfplan-${{ inputs.environment }} \
-            -no-color
+            -no-color 2>&1 | tee /tmp/plan-output.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
         continue-on-error: true
+
+      - name: Show Plan Output on Failure
+        if: steps.plan.outcome == 'failure'
+        run: cat /tmp/plan-output.txt || echo "No plan output captured"
 
       - name: Update Pull Request
         uses: actions/github-script@v7
