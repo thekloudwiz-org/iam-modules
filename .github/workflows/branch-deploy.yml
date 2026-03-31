@@ -12,6 +12,11 @@ on:
       - '**.tfvars'
       - '.github/workflows/**'
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
 jobs:
   determine-environment:
     name: Determine Environment

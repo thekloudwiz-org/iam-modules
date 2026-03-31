@@ -9,6 +9,11 @@ on:
       - '**.tfvars'
       - '.github/workflows/**'
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
 jobs:
   plan-production:
     name: Plan Production Changes
