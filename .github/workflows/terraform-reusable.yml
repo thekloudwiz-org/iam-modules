@@ -115,6 +115,7 @@ jobs:
           terraform plan \
             -var-file=environments/${{ inputs.environment }}.tfvars \
             -var-file=global.tfvars \
+            -var-file=x-repos.tfvars \
             -var="github_token=${{ secrets.GH_PAT }}" \
             -out=tfplan-${{ inputs.environment }} \
             -no-color 2>&1 | tee /tmp/plan-output.txt
