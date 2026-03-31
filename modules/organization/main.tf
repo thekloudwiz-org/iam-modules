@@ -13,12 +13,6 @@ locals {
   memberships      = merge(local.filtered_admins, local.filtered_members)
 }
 
-# Reference the existing organization without requesting email field
-data "github_organization" "org" {
-  count = var.is_organization ? 1 : 0
-  name  = var.github_org
-}
-
 # Safeguard for validating if a GitHub user exists on `terraform plan`
 data "github_user" "user" {
   for_each = var.catch_non_existing_members ? local.memberships : {}
