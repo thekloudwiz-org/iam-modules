@@ -81,7 +81,7 @@ repositories = {
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["android", "pos", "mobile"]
-    visibility          = "private"
+    visibility          = "public"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   }
 }
