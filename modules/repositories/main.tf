@@ -86,7 +86,8 @@ resource "github_branch_protection" "dev" {
   repository_id = github_repository.repos[each.key].node_id
   pattern       = "dev"
 
-  enforce_admins = false
+  enforce_admins    = false
+  allows_force_pushes = true
 
   required_pull_request_reviews {
     dismiss_stale_reviews           = true
