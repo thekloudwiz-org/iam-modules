@@ -67,10 +67,13 @@ resource "github_branch_protection" "main" {
 
   enforce_admins = false
 
+  # Solo contributor — keep the PR flow + stale-review dismissal, but require
+  # zero approvals so the author can self-merge. Raise the count to re-enable a
+  # review gate (e.g. when collaborators join).
   required_pull_request_reviews {
     dismiss_stale_reviews           = true
-    require_code_owner_reviews      = true
-    required_approving_review_count = 1
+    require_code_owner_reviews      = false
+    required_approving_review_count = 0
   }
 
   depends_on = [github_repository.repos]
@@ -86,12 +89,12 @@ resource "github_branch_protection" "dev" {
   repository_id = github_repository.repos[each.key].node_id
   pattern       = "dev"
 
-  enforce_admins    = false
+  enforce_admins      = false
   allows_force_pushes = true
 
   required_pull_request_reviews {
     dismiss_stale_reviews           = true
-    required_approving_review_count = 1
+    required_approving_review_count = 0
     require_code_owner_reviews      = lookup(each.value, "require_code_owner_reviews", false)
   }
 

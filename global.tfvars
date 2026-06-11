@@ -1,9 +1,9 @@
 # org_name   = "thekloudwiz-org"
-github_org   = "thekloudwiz-org"
-project_name = "thekloudwiz"
-aws_region   = "eu-central-1"
-owner            = "thekloudwiz-org"
-is_organization  = true
+github_org      = "thekloudwiz-org"
+project_name    = "thekloudwiz"
+aws_region      = "eu-central-1"
+owner           = "thekloudwiz-org"
+is_organization = true
 # environment  = "global"
 
 # Organization members
@@ -20,7 +20,7 @@ github_teams = {
     privacy               = "closed"
     members               = ["wizreviewer"]
     maintainers           = ["kloudwiz"]
-    admin_repositories    = ["project-ecovolt", "project-kakraba", "iam-modules", "foodgist-web-app", "gyaale-pos-android", "akyeba.thekloudwiz.com"]
+    admin_repositories    = ["project-ecovolt", "project-kakraba", "iam-modules", "gyaale", "gyaale-pos-android", "akyeba", "portfolio"]
     maintain_repositories = []
     push_repositories     = []
     triage_repositories   = []
@@ -31,7 +31,7 @@ github_teams = {
     privacy               = "closed"
     members               = ["wizreviewer"]
     maintainers           = ["kloudwiz"]
-    admin_repositories    = ["project-ecovolt", "project-kakraba", "iam-modules", "foodgist-web-app", "gyaale-pos-android", "akyeba.thekloudwiz.com"]
+    admin_repositories    = ["project-ecovolt", "project-kakraba", "iam-modules", "gyaale", "gyaale-pos-android", "akyeba", "portfolio"]
     maintain_repositories = []
     push_repositories     = []
     triage_repositories   = []
@@ -42,7 +42,7 @@ github_teams = {
     privacy               = "closed"
     members               = ["wizreviewer"]
     maintainers           = ["kloudwiz"]
-    admin_repositories    = ["project-ecovolt", "project-kakraba", "iam-modules", "foodgist-web-app", "gyaale-pos-android", "akyeba.thekloudwiz.com"]
+    admin_repositories    = ["project-ecovolt", "project-kakraba", "iam-modules", "gyaale", "gyaale-pos-android", "akyeba", "portfolio"]
     maintain_repositories = []
     push_repositories     = []
     triage_repositories   = []
@@ -68,7 +68,7 @@ repositories = {
     visibility          = "public"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   },
-    "foodgist-web-app" = {
+  "gyaale" = {
     description         = "A serverless food ordering and event booking platform with online payments, real-time order processing, and an admin dashboard for business insights."
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
@@ -84,11 +84,20 @@ repositories = {
     visibility          = "public"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   },
-  "akyeba.thekloudwiz.com" = {
+  "akyeba" = {
     description         = "Akyeba website"
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["web"]
+    visibility          = "public"
+    code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
+  },
+
+  "portfolio" = {
+    description         = "TheKloudWiz brand + portfolio site at thekloudwiz.com — the top-of-funnel hub above the product marketing sites, showcasing each product with a link-out to its own landing page."
+    has_dev_environment = true
+    environments        = ["dev", "stg", "qa", "prd"]
+    topics              = ["web", "portfolio", "static-site", "aws", "cloudfront"]
     visibility          = "public"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   }
