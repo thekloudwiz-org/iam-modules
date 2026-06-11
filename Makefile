@@ -79,7 +79,7 @@ plan-%:
 		echo -e "$(RED)Error: Environment file environments/$$env.tfvars not found$(NC)\n"; \
 		exit 1; \
 	fi; \
-	terraform plan -var-file=environments/$$env.tfvars -var-file=global.tfvars
+	terraform plan -var-file=environments/$$env.tfvars -var-file=global.tfvars -var-file=x-repos.tfvars
 
 # Apply environment-specific changes
 apply-%:
@@ -88,7 +88,7 @@ apply-%:
 	read -p "Continue? (yes/no): " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
 		echo -e "$(GREEN)Applying changes for $$env environment...$(NC)\n"; \
-		terraform apply -auto-approve -var-file=environments/$$env.tfvars -var-file=global.tfvars; \
+		terraform apply -auto-approve -var-file=environments/$$env.tfvars -var-file=global.tfvars -var-file=x-repos.tfvars; \
 	else \
 		echo -e "$(YELLOW)Operation cancelled$(NC)\n"; \
 	fi
