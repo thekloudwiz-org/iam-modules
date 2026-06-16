@@ -48,8 +48,11 @@ jobs:
             done
           fi
           
-          # Convert to JSON array
-          ENV_JSON=$(printf '%s\n' "${ENVIRONMENTS[@]}" | jq -R . | jq -s .)
+          # Convert to a COMPACT (single-line) JSON array. $GITHUB_OUTPUT only
+          # accepts multi-line values via the heredoc delimiter syntax, so a
+          # pretty-printed array (jq -s) breaks "key=value". jq -cs keeps it on
+          # one line.
+          ENV_JSON=$(printf '%s\n' "${ENVIRONMENTS[@]}" | jq -R . | jq -cs .)
           echo "environments=$ENV_JSON" >> $GITHUB_OUTPUT
           echo "Detected environments: $ENV_JSON"
 
