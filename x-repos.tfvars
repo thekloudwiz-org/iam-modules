@@ -12,5 +12,12 @@ external_repositories = {
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["iam", "terraform", "oidc", "github-actions", "ci-cd"]
     visibility          = "public"
+  },
+  "jbcl" = {
+    description         = "JBCL — Film • Editorial • Media. Premium creative agency site (Next.js static export deployed to S3/CloudFront)."
+    has_dev_environment = true
+    environments        = ["dev"]
+    topics              = ["nextjs", "static-site", "s3", "cloudfront", "website"]
+    visibility          = "private"
   }
 }
