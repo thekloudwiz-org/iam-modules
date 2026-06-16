@@ -84,11 +84,7 @@ jobs:
        (github.event_name == 'push' && needs.detect-changes.outputs.environments != '[]'))
     strategy:
       matrix:
-        environment: ${{ 
-          github.event_name == 'workflow_dispatch' 
-          && fromJson(format('["{0}"]', github.event.inputs.environment)) 
-          || fromJson(needs.detect-changes.outputs.environments) 
-        }}
+        environment: ${{ github.event_name == 'workflow_dispatch' && fromJson(format('["{0}"]', github.event.inputs.environment)) || fromJson(needs.detect-changes.outputs.environments) }}
       max-parallel: 1  # Deploy one environment at a time
     
     environment:
