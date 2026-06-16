@@ -71,6 +71,12 @@ jobs:
       contents: read
       pull-requests: write
 
+    # The github provider authenticates via this env (provider.tf has `token`
+    # commented out). Without it, github data-source reads hit unauthenticated
+    # rate limits and hang ("Still reading...") until the job times out.
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
