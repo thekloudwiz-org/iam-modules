@@ -1,9 +1,10 @@
 name: Pull Request
 
+# Plans run on dev PRs only. main is deploy-only (production-deploy.yml applies
+# on push to main) — code reaching main was already planned + reviewed on dev.
 on:
   pull_request:
     branches:
-      - main
       - dev
     paths:
       - '**.tf'
@@ -17,12 +18,10 @@ permissions:
 
 jobs:
   plan:
-    # Plan the environment that matches the PR's target branch: main -> prd,
-    # dev -> dev. So a PR to dev is reviewed against dev state, not prd.
-    name: Plan ${{ github.base_ref == 'main' && 'prd' || 'dev' }} Changes
+    name: Plan dev Changes
     uses: ./.github/workflows/terraform-reusable.yml
     with:
-      environment: ${{ github.base_ref == 'main' && 'prd' || 'dev' }}
+      environment: dev
       action: plan
       terraform_version: '1.14.6'
     secrets:
@@ -34,8 +33,8 @@ jobs:
       GH_PAT: ${{ secrets.GH_PAT }}
 
   # Stable-named gate for branch protection to require. The plan job's own
-  # check name is dynamic ("Plan <env> Changes / Terraform plan - <env>"),
-  # which can't be pinned as a required context; this job's name is constant.
+  # check name is dynamic, which can't be pinned as a required context; this
+  # job's name is constant.
   plan-gate:
     needs: [plan]
     if: always()

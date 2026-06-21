@@ -15,8 +15,36 @@ permissions:
   pull-requests: write
 
 jobs:
+  # IaC to prod is never a blind apply: plan first, require a human to review
+  # it and approve (the `production` GitHub Environment's required reviewers),
+  # then apply. A dev plan validates against dev state — it does NOT prove a
+  # clean prd apply — and a bad apply here can delete repos, so the prd plan
+  # must be seen before it runs.
+  plan:
+    name: Plan Production
+    uses: ./.github/workflows/terraform-reusable.yml
+    with:
+      environment: prd
+      action: plan
+      terraform_version: '1.14.6'
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  approval:
+    name: Approve Production Apply
+    needs: plan
+    runs-on: ubuntu-latest
+    # Required reviewers on this environment pause the run here; the reviewer
+    # reads the plan job's output, then approves.
+    environment: production
+    steps:
+      - name: Approval gate
+        run: echo "Approved by @${{ github.actor }} — proceeding to terraform apply (prd)."
+
   deploy-production:
     name: Deploy to Production
+    needs: approval
     uses: ./.github/workflows/terraform-reusable.yml
     with:
       environment: prd
@@ -25,7 +53,7 @@ jobs:
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
       GH_PAT: ${{ secrets.GH_PAT }}
-    
+
   notify-success:
     name: Notify Success
     needs: deploy-production
