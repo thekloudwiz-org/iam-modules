@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
     paths:
       - '**.tf'
       - '**.tfvars'
@@ -15,11 +16,13 @@ permissions:
   pull-requests: write
 
 jobs:
-  plan-production:
-    name: Plan Production Changes
+  plan:
+    # Plan the environment that matches the PR's target branch: main -> prd,
+    # dev -> dev. So a PR to dev is reviewed against dev state, not prd.
+    name: Plan ${{ github.base_ref == 'main' && 'prd' || 'dev' }} Changes
     uses: ./.github/workflows/terraform-reusable.yml
     with:
-      environment: prd
+      environment: ${{ github.base_ref == 'main' && 'prd' || 'dev' }}
       action: plan
       terraform_version: '1.14.6'
     secrets:
