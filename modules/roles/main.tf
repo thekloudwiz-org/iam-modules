@@ -25,52 +25,60 @@ locals {
   # deterministic — matches what the old module produced, byte for byte.
   trust_repositories = merge(var.repositories, var.external_repositories)
 
-  # Order preserved from the old module: branch refs, then environments, then
-  # pull_request — so the migrating apply is a no-op on the policy itself.
-  oidc_sub_patterns = concat(
-    flatten([
-      for repo_name, repo in local.trust_repositories : [
-        for branch in local.env_branch_mapping[var.environment] :
-        "repo:${var.github_org}/${repo_name}:ref:refs/heads/${branch}"
-      ]
-    ]),
-    flatten([
-      for repo_name, repo in local.trust_repositories : [
-        for env in local.allowed_environments[var.environment] :
-        "repo:${var.github_org}/${repo_name}:environment:${env}"
-      ]
-    ]),
-    [
-      for repo_name, repo in local.trust_repositories :
-      "repo:${var.github_org}/${repo_name}:pull_request"
+  # Sub-claim patterns, by source. The deploy role allows branch pushes +
+  # GitHub environments + PRs; the read-only PR role allows PRs only, so a
+  # pull_request workflow can never assume the deploy role's permissions.
+  branch_subs = flatten([
+    for repo_name, repo in local.trust_repositories : [
+      for branch in local.env_branch_mapping[var.environment] :
+      "repo:${var.github_org}/${repo_name}:ref:refs/heads/${branch}"
     ]
-  )
+  ])
+  environment_subs = flatten([
+    for repo_name, repo in local.trust_repositories : [
+      for env in local.allowed_environments[var.environment] :
+      "repo:${var.github_org}/${repo_name}:environment:${env}"
+    ]
+  ])
+  pull_request_subs = [
+    for repo_name, repo in local.trust_repositories :
+    "repo:${var.github_org}/${repo_name}:pull_request"
+  ]
 
-  oidc_assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = { Federated = var.oidc_provider_arn }
-        Action    = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          }
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = local.oidc_sub_patterns
+  # Per-role sub lists. Deploy order preserved from the old module (branch,
+  # environment, pull_request) so the migration is a no-op on that role.
+  role_sub_patterns = {
+    github_actions = concat(local.branch_subs, local.environment_subs, local.pull_request_subs)
+    pull_request   = local.pull_request_subs
+  }
+
+  assume_role_policies = {
+    for role_key, subs in local.role_sub_patterns : role_key => jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect    = "Allow"
+          Principal = { Federated = var.oidc_provider_arn }
+          Action    = "sts:AssumeRoleWithWebIdentity"
+          Condition = {
+            StringEquals = {
+              "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            }
+            StringLike = {
+              "token.actions.githubusercontent.com:sub" = subs
+            }
           }
         }
-      }
-    ]
-  })
+      ]
+    })
+  }
 }
 
 # GitHub Actions IAM Role for environment-specific deployments
 resource "aws_iam_role" "github_actions" {
   name = "${var.project_name}-${var.environment}-github-actions-role"
 
-  assume_role_policy = local.oidc_assume_role_policy
+  assume_role_policy = local.assume_role_policies["github_actions"]
 
   tags = merge(
     var.tags,
@@ -102,10 +110,10 @@ resource "aws_iam_role_policy_attachment" "wildcard_policy" {
 resource "aws_iam_role" "pull_request" {
   name = "${var.project_name}-${var.environment}-pull-request-role"
 
-  # Same OIDC trust as the deploy role (parity with the prior module, which
-  # computed an identical sub list for both roles). Access is differentiated
-  # by the attached permission policies, not the trust policy.
-  assume_role_policy = local.oidc_assume_role_policy
+  # Read-only role: assumable from pull_request events ONLY — never from a
+  # branch push or environment deploy. (The prior module gave both roles the
+  # same trust; this scopes the PR role down to its actual job.)
+  assume_role_policy = local.assume_role_policies["pull_request"]
 
   tags = merge(
     var.tags,
