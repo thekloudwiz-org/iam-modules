@@ -29,6 +29,12 @@ variable "repositories" {
   default     = {}
 }
 
+variable "external_repositories" {
+  description = "Map of external repositories to include in the OIDC trust policy"
+  type        = map(any)
+  default     = {}
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

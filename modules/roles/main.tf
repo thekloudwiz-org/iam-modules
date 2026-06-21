@@ -1,20 +1,76 @@
+# OIDC trust policy, computed in-line and set directly on each role's
+# assume_role_policy. This replaces the previous trust-policies module, which
+# created the role with a Deny stub and then pushed the real policy out-of-band
+# via a null_resource `aws iam update-assume-role-policy` keyed on timestamp() —
+# forcing a destroy/recreate on every apply and momentarily leaving the role on
+# Deny mid-apply. The policy is pure data (no CLI behaviour the resource can't
+# express), so this yields the identical effective trust while planning clean.
+locals {
+  # GitHub ref branch allowed to assume the role, per environment.
+  env_branch_mapping = {
+    dev = ["dev"]
+    stg = ["main"]
+    qa  = ["main"]
+    prd = ["main"]
+  }
+  # GitHub Actions environments allowed to assume the role, per environment.
+  allowed_environments = {
+    dev = ["dev"]
+    stg = ["stg"]
+    qa  = ["qa"]
+    prd = ["stg", "qa", "prd"]
+  }
+
+  # Managed + external repos, iterated by key (sorted) so the sub list is
+  # deterministic — matches what the old module produced, byte for byte.
+  trust_repositories = merge(var.repositories, var.external_repositories)
+
+  # Order preserved from the old module: branch refs, then environments, then
+  # pull_request — so the migrating apply is a no-op on the policy itself.
+  oidc_sub_patterns = concat(
+    flatten([
+      for repo_name, repo in local.trust_repositories : [
+        for branch in local.env_branch_mapping[var.environment] :
+        "repo:${var.github_org}/${repo_name}:ref:refs/heads/${branch}"
+      ]
+    ]),
+    flatten([
+      for repo_name, repo in local.trust_repositories : [
+        for env in local.allowed_environments[var.environment] :
+        "repo:${var.github_org}/${repo_name}:environment:${env}"
+      ]
+    ]),
+    [
+      for repo_name, repo in local.trust_repositories :
+      "repo:${var.github_org}/${repo_name}:pull_request"
+    ]
+  )
+
+  oidc_assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Federated = var.oidc_provider_arn }
+        Action    = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = local.oidc_sub_patterns
+          }
+        }
+      }
+    ]
+  })
+}
+
 # GitHub Actions IAM Role for environment-specific deployments
 resource "aws_iam_role" "github_actions" {
   name = "${var.project_name}-${var.environment}-github-actions-role"
 
-  # Initial assume role policy with deny effect
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Deny"
-        Principal = {
-          Federated = var.oidc_provider_arn
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+  assume_role_policy = local.oidc_assume_role_policy
 
   tags = merge(
     var.tags,
@@ -46,19 +102,10 @@ resource "aws_iam_role_policy_attachment" "wildcard_policy" {
 resource "aws_iam_role" "pull_request" {
   name = "${var.project_name}-${var.environment}-pull-request-role"
 
-  # Initial assume role policy with deny effect
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Deny"
-        Principal = {
-          Federated = var.oidc_provider_arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-      }
-    ]
-  })
+  # Same OIDC trust as the deploy role (parity with the prior module, which
+  # computed an identical sub list for both roles). Access is differentiated
+  # by the attached permission policies, not the trust policy.
+  assume_role_policy = local.oidc_assume_role_policy
 
   tags = merge(
     var.tags,
