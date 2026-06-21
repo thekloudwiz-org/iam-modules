@@ -76,18 +76,10 @@ resource "github_branch_protection" "main" {
     required_approving_review_count = 0
   }
 
-  # Per-repo required CI checks (empty for repos that don't set them, so
-  # this is a no-op everywhere else). strict=false: don't force the branch
-  # to be rebuilt against a moved base — the checks already ran on the PR
-  # head. Use aggregator-style contexts (e.g. "pr-gate") for path-filtered
-  # pipelines so a skipped job can't deadlock the merge.
-  dynamic "required_status_checks" {
-    for_each = length(each.value.required_status_checks) > 0 ? [1] : []
-    content {
-      strict   = false
-      contexts = each.value.required_status_checks
-    }
-  }
+  # No required status checks on main: it's deploy-only. Tests, plans, and
+  # scans run as required checks on the dev branch; code reaching main was
+  # already validated there. required_status_checks is wired on the dev
+  # protection only (below).
 
   depends_on = [github_repository.repos]
 }
