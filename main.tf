@@ -30,7 +30,7 @@ module "teams" {
   push_repositories     = each.value.push_repositories
   triage_repositories   = each.value.triage_repositories
   pull_repositories     = each.value.pull_repositories
-  module_depends_on = [module.repositories]
+  module_depends_on     = [module.repositories]
 }
 
 # OIDC Provider - Single provider for GitHub Actions
@@ -52,16 +52,20 @@ module "permissions" {
   depends_on = [module.oidc_provider]
 }
 
-# IAM Roles
+# IAM Roles — the OIDC trust policy is now set directly on each role inside
+# this module (see modules/roles). The former trust-policies module (which
+# pushed the policy out-of-band via a null_resource on every apply) has been
+# removed.
 module "roles" {
   source = "./modules/roles"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  oidc_provider_arn = module.oidc_provider.arn
-  github_org        = var.github_org
-  policy_arns       = module.permissions.policy_arns
-  repositories      = var.repositories
+  project_name          = var.project_name
+  environment           = var.environment
+  oidc_provider_arn     = module.oidc_provider.arn
+  github_org            = var.github_org
+  policy_arns           = module.permissions.policy_arns
+  repositories          = var.repositories
+  external_repositories = var.external_repositories
 
   depends_on = [module.permissions]
 }
@@ -72,18 +76,4 @@ module "repositories" {
 
   project_name = var.project_name
   repositories = var.repositories
-}
-
-# Trust Policies
-module "trust_policies" {
-  source = "./modules/trust-policies"
-
-  role_arns             = module.roles.role_arns
-  oidc_provider_arn     = module.oidc_provider.arn
-  github_org            = var.github_org
-  repositories          = var.repositories
-  external_repositories = var.external_repositories
-  environment           = var.environment
-
-  depends_on = [module.roles]
 }
