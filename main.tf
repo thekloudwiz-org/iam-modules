@@ -77,3 +77,30 @@ module "repositories" {
   project_name = var.project_name
   repositories = var.repositories
 }
+
+# Branch protection for this repo's own `dev` branch. iam-modules is an
+# external repo (not in var.repositories), so the repositories module doesn't
+# manage it — protect it here directly via a data lookup (no repo import).
+# Requires the `plan-gate` check (pull-request.yml) so a PR's terraform plan
+# must pass before merge, and requires PRs (0 approvals — solo contributor).
+data "github_repository" "self" {
+  name = "iam-modules"
+}
+
+resource "github_branch_protection" "self_dev" {
+  repository_id = data.github_repository.self.node_id
+  pattern       = "dev"
+
+  enforce_admins      = false
+  allows_force_pushes = true
+
+  required_pull_request_reviews {
+    dismiss_stale_reviews           = true
+    required_approving_review_count = 0
+  }
+
+  required_status_checks {
+    strict   = false
+    contexts = ["plan-gate"]
+  }
+}
