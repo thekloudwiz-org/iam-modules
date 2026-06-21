@@ -130,3 +130,13 @@ resource "aws_iam_role_policy_attachment" "pull_request_policy" {
   role       = aws_iam_role.pull_request.name
   policy_arn = var.policy_arns["readonly"]
 }
+
+# AWS-managed ReadOnlyAccess so PR `terraform plan` jobs can refresh resources
+# across every service a product stack touches (lambda, apigw, cognito,
+# cloudfront, sns, ssm, kms, ...). The custom `readonly` policy above only
+# covers a handful of services — enough for this repo, not for akyeba/gyaale.
+# Read-only: a PR can refresh state but can't mutate anything.
+resource "aws_iam_role_policy_attachment" "pull_request_readonly_managed" {
+  role       = aws_iam_role.pull_request.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
