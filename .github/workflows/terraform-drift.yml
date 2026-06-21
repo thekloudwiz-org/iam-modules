@@ -65,6 +65,7 @@ jobs:
           terraform plan \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
             -var-file="global.tfvars" \
+            -var-file="x-repos.tfvars" \
             -var="github_token=${{ secrets.GITHUB_TOKEN }}" \
             -detailed-exitcode \
             -no-color
