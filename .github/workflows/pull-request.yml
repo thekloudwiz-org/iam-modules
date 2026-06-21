@@ -32,3 +32,19 @@ jobs:
       # subjects and granted read-only perms sufficient for `terraform plan`.
       AWS_ROLE_ARN: ${{ secrets.AWS_PLAN_ROLE_ARN }}
       GH_PAT: ${{ secrets.GH_PAT }}
+
+  # Stable-named gate for branch protection to require. The plan job's own
+  # check name is dynamic ("Plan <env> Changes / Terraform plan - <env>"),
+  # which can't be pinned as a required context; this job's name is constant.
+  plan-gate:
+    needs: [plan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the plan to have succeeded
+        run: |
+          if [ "${{ needs.plan.result }}" != "success" ]; then
+            echo "::error::Terraform plan did not pass (result: ${{ needs.plan.result }})"
+            exit 1
+          fi
+          echo "Terraform plan passed."
