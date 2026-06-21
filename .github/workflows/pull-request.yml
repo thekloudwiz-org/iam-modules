@@ -23,5 +23,9 @@ jobs:
       action: plan
       terraform_version: '1.14.6'
     secrets:
-      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      # PR plans assume the READ-ONLY pull-request role, not the deploy role.
+      # The deploy role carries wildcard (*) perms on dev; a pull_request must
+      # not be able to obtain those. This role is scoped to pull_request OIDC
+      # subjects and granted read-only perms sufficient for `terraform plan`.
+      AWS_ROLE_ARN: ${{ secrets.AWS_PLAN_ROLE_ARN }}
       GH_PAT: ${{ secrets.GH_PAT }}
