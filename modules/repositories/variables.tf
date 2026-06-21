@@ -13,6 +13,7 @@ variable "repositories" {
     visibility                 = string
     code_owners                = optional(list(string))
     require_code_owner_reviews = optional(bool, false)
+    required_status_checks     = optional(list(string), [])
   }))
   default = {} # Allow empty map for flexibility
 }

@@ -85,12 +85,13 @@ repositories = {
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   },
   "akyeba" = {
-    description         = "Akyeba website"
-    has_dev_environment = true
-    environments        = ["dev", "stg", "qa", "prd"]
-    topics              = ["web"]
-    visibility          = "public"
-    code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
+    description            = "Akyeba website"
+    has_dev_environment    = true
+    environments           = ["dev", "stg", "qa", "prd"]
+    topics                 = ["web"]
+    visibility             = "public"
+    code_owners            = ["kloudwiz", "developers", "devops", "wizreviewer"]
+    required_status_checks = ["pr-gate", "audit"]
   },
 
   "portfolio" = {
