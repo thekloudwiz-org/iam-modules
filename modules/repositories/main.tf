@@ -76,6 +76,19 @@ resource "github_branch_protection" "main" {
     required_approving_review_count = 0
   }
 
+  # Per-repo required CI checks (empty for repos that don't set them, so
+  # this is a no-op everywhere else). strict=false: don't force the branch
+  # to be rebuilt against a moved base — the checks already ran on the PR
+  # head. Use aggregator-style contexts (e.g. "pr-gate") for path-filtered
+  # pipelines so a skipped job can't deadlock the merge.
+  dynamic "required_status_checks" {
+    for_each = length(each.value.required_status_checks) > 0 ? [1] : []
+    content {
+      strict   = false
+      contexts = each.value.required_status_checks
+    }
+  }
+
   depends_on = [github_repository.repos]
 }
 
@@ -96,6 +109,14 @@ resource "github_branch_protection" "dev" {
     dismiss_stale_reviews           = true
     required_approving_review_count = 0
     require_code_owner_reviews      = lookup(each.value, "require_code_owner_reviews", false)
+  }
+
+  dynamic "required_status_checks" {
+    for_each = length(each.value.required_status_checks) > 0 ? [1] : []
+    content {
+      strict   = false
+      contexts = each.value.required_status_checks
+    }
   }
 
   depends_on = [github_repository.repos, github_branch.dev]
