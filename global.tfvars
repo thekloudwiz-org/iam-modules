@@ -89,7 +89,7 @@ repositories = {
     has_dev_environment    = true
     environments           = ["dev", "stg", "qa", "prd"]
     topics                 = ["web"]
-    visibility             = "public"
+    visibility             = "private"
     code_owners            = ["kloudwiz", "developers", "devops", "wizreviewer"]
     required_status_checks = ["pr-gate", "audit"]
   },
