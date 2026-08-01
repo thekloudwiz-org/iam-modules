@@ -15,7 +15,14 @@ resource "github_repository" "repos" {
   allow_rebase_merge     = true
   allow_squash_merge     = true
 
+  # Protect against accidental deletion — archive the repo instead of destroying
+  archive_on_destroy = true
+
   topics = each.value.topics
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Create dev branch for each repository
@@ -67,11 +74,11 @@ resource "github_branch_protection" "main" {
 
   enforce_admins = false
 
-  # Solo contributor — keep the PR flow + stale-review dismissal, but require
-  # zero approvals so the author can self-merge. Raise the count to re-enable a
-  # review gate (e.g. when collaborators join).
+  # Solo contributor — keep the PR flow, but require zero approvals so the
+  # author can self-merge. dismiss_stale_reviews and code owner reviews require
+  # GitHub Team/Pro for private repos, so only enable them for public repos.
   required_pull_request_reviews {
-    dismiss_stale_reviews           = true
+    dismiss_stale_reviews           = each.value.visibility == "public" ? true : false
     require_code_owner_reviews      = false
     required_approving_review_count = 0
   }
@@ -97,14 +104,18 @@ resource "github_branch_protection" "dev" {
   enforce_admins      = false
   allows_force_pushes = true
 
+  # dismiss_stale_reviews and require_code_owner_reviews require GitHub
+  # Team/Pro for private repos — disable them for private visibility.
   required_pull_request_reviews {
-    dismiss_stale_reviews           = true
+    dismiss_stale_reviews           = each.value.visibility == "public" ? true : false
     required_approving_review_count = 0
-    require_code_owner_reviews      = lookup(each.value, "require_code_owner_reviews", false)
+    require_code_owner_reviews      = each.value.visibility == "public" ? lookup(each.value, "require_code_owner_reviews", false) : false
   }
 
+  # required_status_checks also require GitHub Team/Pro for private repos;
+  # only apply when the repo has checks configured AND is public.
   dynamic "required_status_checks" {
-    for_each = length(each.value.required_status_checks) > 0 ? [1] : []
+    for_each = length(each.value.required_status_checks) > 0 && each.value.visibility == "public" ? [1] : []
     content {
       strict   = false
       contexts = each.value.required_status_checks

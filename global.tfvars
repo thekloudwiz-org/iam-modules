@@ -73,7 +73,7 @@ repositories = {
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["serverless", "aws", "terraform", "dynamodb", "api-gateway", "lambda", "cloudfront", "tailwindcss", "paystack", "food-ordering", "ci-cd"]
-    visibility          = "public"
+    visibility          = "private"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   },
   "gyaale-pos-android" = {
@@ -81,7 +81,7 @@ repositories = {
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["android", "pos", "mobile"]
-    visibility          = "public"
+    visibility          = "private"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   },
   "akyeba" = {
@@ -89,9 +89,9 @@ repositories = {
     has_dev_environment    = true
     environments           = ["dev", "stg", "qa", "prd"]
     topics                 = ["web"]
-    visibility             = "public"
+    visibility             = "private"
     code_owners            = ["kloudwiz", "developers", "devops", "wizreviewer"]
-    required_status_checks = ["pr-gate", "audit"]
+    required_status_checks = []
   },
 
   "portfolio" = {
@@ -99,7 +99,7 @@ repositories = {
     has_dev_environment = true
     environments        = ["dev", "stg", "qa", "prd"]
     topics              = ["web", "portfolio", "static-site", "aws", "cloudfront"]
-    visibility          = "public"
+    visibility          = "private"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   }
 }
