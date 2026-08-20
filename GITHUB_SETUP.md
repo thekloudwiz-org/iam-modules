@@ -46,7 +46,7 @@ AWS_ROLE_ARN: arn:aws:iam::ACCOUNT-ID:role/GitHubActionsRole
 GitHub Personal Access Token with repository management permissions.
 
 ```
-GITHUB_TOKEN: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_TOKEN: <set via TF_VAR_github_token — never commit>
 ```
 
 **Required permissions:**
