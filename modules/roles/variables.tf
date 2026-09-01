@@ -18,6 +18,15 @@ variable "github_org" {
   type        = string
 }
 
+variable "github_org_id" {
+  description = <<-DESC
+    Numeric GitHub organization ID, used in the immutable OIDC subject claim.
+    Pinned rather than wildcarded so that an organization deleted and
+    re-registered under the same name cannot assume these roles.
+  DESC
+  type        = string
+}
+
 variable "policy_arns" {
   description = "Map of policy ARNs to attach to the role"
   type        = map(string)

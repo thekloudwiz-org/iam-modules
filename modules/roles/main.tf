@@ -21,28 +21,56 @@ locals {
     prd = ["stg", "qa", "prd"]
   }
 
-  # Managed + external repos, iterated by key (sorted) so the sub list is
-  # deterministic — matches what the old module produced, byte for byte.
-  trust_repositories = merge(var.repositories, var.external_repositories)
+  # GitHub emits the OIDC subject claim in two formats:
+  #
+  #   classic    repo:ORG/REPO:environment:dev
+  #   immutable  repo:ORG@216174784/REPO@1353919829:environment:dev
+  #
+  # Repos created before immutable subject claims rolled out send the classic
+  # form; every repo created since sends the immutable form. Neither the org-
+  # nor the repo-level "use immutable subject claim" toggle turns this off for
+  # new repos — verified against thekloudwiz-org, where the org setting is
+  # unchecked and a new repo still emitted the immutable form. So both formats
+  # have to be trusted, permanently.
+  #
+  # The REPO portion is wildcarded rather than enumerated per repository.
+  # Enumerating both formats for every repo does not fit inside an IAM trust
+  # policy: the prd role alone would need ~100 patterns, roughly 6300
+  # characters against a hard limit of 2048 (4096 at maximum quota). The dev
+  # role was already at 1929 of 2048 with one format and ten repos.
+  #
+  # The ORG portion is deliberately NOT wildcarded. Pinning the numeric org ID
+  # preserves the property immutable subject claims exist for: an organization
+  # deleted and re-registered under the same name gets a different ID and will
+  # not match. A GitHub org name cannot contain "@", so neither prefix can be
+  # spoofed by a lookalike organization.
+  #
+  # Trade-off worth knowing: trust is now scoped to "any repository in this
+  # org" rather than an explicit allowlist. Every repo in the org was already
+  # on that allowlist, so this is not a practical widening today — but adding a
+  # repo to the org now grants it this role without a Terraform change.
+  repo_prefixes = [
+    "repo:${var.github_org}/*",
+    "repo:${var.github_org}@${var.github_org_id}/*",
+  ]
 
   # Sub-claim patterns, by source. The deploy role allows branch pushes +
   # GitHub environments + PRs; the read-only PR role allows PRs only, so a
   # pull_request workflow can never assume the deploy role's permissions.
   branch_subs = flatten([
-    for repo_name, repo in local.trust_repositories : [
+    for prefix in local.repo_prefixes : [
       for branch in local.env_branch_mapping[var.environment] :
-      "repo:${var.github_org}/${repo_name}:ref:refs/heads/${branch}"
+      "${prefix}:ref:refs/heads/${branch}"
     ]
   ])
   environment_subs = flatten([
-    for repo_name, repo in local.trust_repositories : [
+    for prefix in local.repo_prefixes : [
       for env in local.allowed_environments[var.environment] :
-      "repo:${var.github_org}/${repo_name}:environment:${env}"
+      "${prefix}:environment:${env}"
     ]
   ])
   pull_request_subs = [
-    for repo_name, repo in local.trust_repositories :
-    "repo:${var.github_org}/${repo_name}:pull_request"
+    for prefix in local.repo_prefixes : "${prefix}:pull_request"
   ]
 
   # Per-role sub lists. Deploy order preserved from the old module (branch,
