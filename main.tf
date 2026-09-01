@@ -63,6 +63,7 @@ module "roles" {
   environment           = var.environment
   oidc_provider_arn     = module.oidc_provider.arn
   github_org            = var.github_org
+  github_org_id         = data.github_organization.this.id
   policy_arns           = module.permissions.policy_arns
   repositories          = var.repositories
   external_repositories = var.external_repositories
