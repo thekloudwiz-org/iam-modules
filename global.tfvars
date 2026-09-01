@@ -101,5 +101,14 @@ repositories = {
     topics              = ["web", "portfolio", "static-site", "aws", "cloudfront"]
     visibility          = "private"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
+  },
+
+  "ahantatechlab" = {
+    description         = "Ahanta Tech Lab — technology and innovation hub in Agona Nkwanta, Ghana. Astro static site on S3/CloudFront."
+    has_dev_environment = true
+    environments        = ["dev", "stg", "qa", "prd"]
+    topics              = ["web", "astro", "static-site", "aws", "cloudfront"]
+    visibility          = "private"
+    code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   }
 }
