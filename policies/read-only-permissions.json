@@ -72,6 +72,16 @@
         "ecr:BatchGetImage"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "SecretsManagerProductSecretRead",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
+        "arn:${partition}:secretsmanager:${region}:${account_id}:secret:gyaale/*"
+      ]
     }
   ]
 }

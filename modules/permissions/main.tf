@@ -39,22 +39,6 @@ resource "aws_iam_policy" "pull_request_read_only" {
           "arn:${var.template_vars.partition}:s3:::${var.project_name}-terraform-state",
           "arn:${var.template_vars.partition}:s3:::${var.project_name}-terraform-state/*/*"
         ]
-      },
-      # A PR `terraform plan` refreshes aws_secretsmanager_secret_version
-      # resources, and the AWS-managed ReadOnlyAccess policy deliberately
-      # withholds GetSecretValue. Any repo that manages secrets in terraform
-      # therefore fails its plan outright and can never show a green gate —
-      # gyaale did, 2026-09-04, on a PR that only touched CloudWatch alarms.
-      #
-      # Scoped to the product secret prefixes, never the account, and read
-      # only: no put, no rotate, no delete. Add a prefix here when another
-      # product starts managing secrets in terraform.
-      {
-        Effect = "Allow"
-        Action = ["secretsmanager:GetSecretValue"]
-        Resource = [
-          "arn:${var.template_vars.partition}:secretsmanager:${var.template_vars.region}:${var.template_vars.account_id}:secret:gyaale/*"
-        ]
       }
     ]
   })
