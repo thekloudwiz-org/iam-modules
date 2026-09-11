@@ -110,5 +110,14 @@ repositories = {
     topics              = ["web", "astro", "static-site", "aws", "cloudfront"]
     visibility          = "private"
     code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
+  },
+
+  "acepsafrica" = {
+    description         = "ACEPS — Africa Center for Environmental Protection and Sustainability, an environmental education and training NGO in Ghana's Western Region. Astro static site on S3/CloudFront."
+    has_dev_environment = true
+    environments        = ["dev", "stg", "qa", "prd"]
+    topics              = ["web", "astro", "static-site", "aws", "cloudfront"]
+    visibility          = "private"
+    code_owners         = ["kloudwiz", "developers", "devops", "wizreviewer"]
   }
 }
